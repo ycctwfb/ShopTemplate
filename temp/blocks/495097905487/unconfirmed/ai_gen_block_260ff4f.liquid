@@ -1,6 +1,666 @@
+{% doc %}
+  @prompt
+    Create a luxury animated Shopify header/navigation bar for the Valentine’s brand VIRTIV.
+    
+    Header layout: centred brand mark with navigation links evenly spaced left and right.
+    
+    Brand logo treatment:
+    – The word “VIRTIV” placed inside a large elegant love heart outline
+    – Heart outline softly glowing in rose-pink with subtle animated pulse (slow, breathing motion)
+    – Brand text in refined serif or high-end modern font, crisp white or soft champagne tone
+    
+    Animation details:
+    – On page load, the heart outline gently draws itself into existence
+    – On hover, the heart emits a faint shimmer and micro heart particles drift upward
+    – Logo remains static and readable (no distracting rotation)
+    
+    Navigation links:
+    Home • Shop • Catalog • Reviews • About • Contact
+    
+    Link behaviour:
+    – Underline morphs into a tiny heart on hover
+    – Smooth fade-in animation on initial load
+    
+    Header behaviour:
+    – Transparent over hero section
+    – Becomes softly blurred blush-pink glassmorphism on scroll
+    
+    Overall style: high-end Valentine luxury, minimal, elegant, Shopify-safe, mobile-optimised
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .virtiv-header-{{ ai_gen_id }} {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    transition: background-color 0.4s ease, backdrop-filter 0.4s ease;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}.scrolled {
+    background-color: {{ block.settings.scroll_bg_color }};
+    backdrop-filter: blur({{ block.settings.blur_amount }}px);
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__container {
+    max-width: {{ block.settings.max_width }}px;
+    margin: 0 auto;
+    padding: {{ block.settings.vertical_padding }}px {{ block.settings.horizontal_padding }}px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__nav {
+    display: flex;
+    align-items: center;
+    gap: {{ block.settings.link_spacing }}px;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__nav--left {
+    justify-content: flex-end;
+    flex: 1;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__nav--right {
+    justify-content: flex-start;
+    flex: 1;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__logo {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__heart-container {
+    position: relative;
+    width: {{ block.settings.logo_size }}px;
+    height: {{ block.settings.logo_size }}px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__heart-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 {{ block.settings.glow_intensity }}px {{ block.settings.heart_color }});
+    animation: virtiv-heart-pulse-{{ ai_gen_id }} {{ block.settings.pulse_duration }}s ease-in-out infinite;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__heart-path {
+    fill: none;
+    stroke: {{ block.settings.heart_color }};
+    stroke-width: {{ block.settings.heart_stroke_width }};
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: virtiv-heart-draw-{{ ai_gen_id }} {{ block.settings.draw_duration }}s ease-out forwards;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__logo:hover .virtiv-header-{{ ai_gen_id }}__heart-svg {
+    filter: drop-shadow(0 0 {{ block.settings.glow_intensity | times: 1.5 }}px {{ block.settings.heart_color }});
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__brand-text {
+    position: relative;
+    z-index: 1;
+    font-family: {{ block.settings.brand_font.family }}, {{ block.settings.brand_font.fallback_families }};
+    font-weight: {{ block.settings.brand_font.weight }};
+    font-size: {{ block.settings.brand_text_size }}px;
+    color: {{ block.settings.brand_text_color }};
+    letter-spacing: {{ block.settings.letter_spacing }}px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__particle {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__logo:hover .virtiv-header-{{ ai_gen_id }}__particle {
+    animation: virtiv-particle-float-{{ ai_gen_id }} {{ block.settings.particle_duration }}s ease-out forwards;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link {
+    position: relative;
+    font-family: {{ block.settings.nav_font.family }}, {{ block.settings.nav_font.fallback_families }};
+    font-weight: {{ block.settings.nav_font.weight }};
+    font-size: {{ block.settings.nav_text_size }}px;
+    color: {{ block.settings.nav_text_color }};
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    opacity: 0;
+    animation: virtiv-link-fade-{{ ai_gen_id }} 0.6s ease-out forwards;
+    transition: color 0.3s ease;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 1px;
+    background-color: {{ block.settings.nav_text_color }};
+    transition: width 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link:hover {
+    color: {{ block.settings.nav_hover_color }};
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link:hover::after {
+    width: 100%;
+    opacity: 0;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link-heart {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+  }
+
+  .virtiv-header-{{ ai_gen_id }}__link:hover .virtiv-header-{{ ai_gen_id }}__link-heart {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+
+  @keyframes virtiv-heart-draw-{{ ai_gen_id }} {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes virtiv-heart-pulse-{{ ai_gen_id }} {
+    0%, 100% {
+      filter: drop-shadow(0 0 {{ block.settings.glow_intensity }}px {{ block.settings.heart_color }});
+    }
+    50% {
+      filter: drop-shadow(0 0 {{ block.settings.glow_intensity | times: 1.3 }}px {{ block.settings.heart_color }});
+    }
+  }
+
+  @keyframes virtiv-particle-float-{{ ai_gen_id }} {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scale(0);
+    }
+    20% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-60px) scale(1);
+    }
+  }
+
+  @keyframes virtiv-link-fade-{{ ai_gen_id }} {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media screen and (max-width: 989px) {
+    .virtiv-header-{{ ai_gen_id }}__container {
+      flex-direction: column;
+      gap: 20px;
+      padding: {{ block.settings.vertical_padding | times: 0.7 }}px {{ block.settings.horizontal_padding | times: 0.7 }}px;
+    }
+
+    .virtiv-header-{{ ai_gen_id }}__nav {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: {{ block.settings.link_spacing | times: 0.7 }}px;
+    }
+
+    .virtiv-header-{{ ai_gen_id }}__nav--left,
+    .virtiv-header-{{ ai_gen_id }}__nav--right {
+      flex: none;
+    }
+
+    .virtiv-header-{{ ai_gen_id }}__heart-container {
+      width: {{ block.settings.logo_size | times: 0.8 }}px;
+      height: {{ block.settings.logo_size | times: 0.8 }}px;
+    }
+
+    .virtiv-header-{{ ai_gen_id }}__brand-text {
+      font-size: {{ block.settings.brand_text_size | times: 0.8 }}px;
+    }
+
+    .virtiv-header-{{ ai_gen_id }}__link {
+      font-size: {{ block.settings.nav_text_size | times: 0.9 }}px;
+    }
+  }
+{% endstyle %}
+
+<virtiv-header-{{ ai_gen_id }} class="virtiv-header-{{ ai_gen_id }}" {{ block.shopify_attributes }}>
+  <div class="virtiv-header-{{ ai_gen_id }}__container">
+    <nav class="virtiv-header-{{ ai_gen_id }}__nav virtiv-header-{{ ai_gen_id }}__nav--left">
+      {% if block.settings.link_1_text != blank %}
+        <a href="{{ block.settings.link_1_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.1s;">
+          {{ block.settings.link_1_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+      {% if block.settings.link_2_text != blank %}
+        <a href="{{ block.settings.link_2_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.2s;">
+          {{ block.settings.link_2_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+      {% if block.settings.link_3_text != blank %}
+        <a href="{{ block.settings.link_3_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.3s;">
+          {{ block.settings.link_3_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+    </nav>
+
+    <a href="{{ block.settings.logo_link }}" class="virtiv-header-{{ ai_gen_id }}__logo">
+      <div class="virtiv-header-{{ ai_gen_id }}__heart-container">
+        <svg class="virtiv-header-{{ ai_gen_id }}__heart-svg" viewBox="0 0 100 100">
+          <path class="virtiv-header-{{ ai_gen_id }}__heart-path" d="M50,85 C50,85 15,60 15,35 C15,25 22,18 30,18 C37,18 43,22 50,30 C57,22 63,18 70,18 C78,18 85,25 85,35 C85,60 50,85 50,85 Z"/>
+        </svg>
+        <h1 class="virtiv-header-{{ ai_gen_id }}__brand-text">{{ block.settings.brand_text }}</h1>
+        {% for i in (1..8) %}
+          {% assign angle = i | times: 45 %}
+          {% assign delay = i | divided_by: 20.0 %}
+          <svg class="virtiv-header-{{ ai_gen_id }}__particle" viewBox="0 0 24 24" fill="{{ block.settings.heart_color }}" style="top: 50%; left: 50%; animation-delay: {{ delay }}s;">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        {% endfor %}
+      </div>
+    </a>
+
+    <nav class="virtiv-header-{{ ai_gen_id }}__nav virtiv-header-{{ ai_gen_id }}__nav--right">
+      {% if block.settings.link_4_text != blank %}
+        <a href="{{ block.settings.link_4_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.4s;">
+          {{ block.settings.link_4_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+      {% if block.settings.link_5_text != blank %}
+        <a href="{{ block.settings.link_5_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.5s;">
+          {{ block.settings.link_5_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+      {% if block.settings.link_6_text != blank %}
+        <a href="{{ block.settings.link_6_url }}" class="virtiv-header-{{ ai_gen_id }}__link" style="animation-delay: 0.6s;">
+          {{ block.settings.link_6_text }}
+          <svg class="virtiv-header-{{ ai_gen_id }}__link-heart" viewBox="0 0 24 24" fill="{{ block.settings.nav_hover_color }}">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </a>
+      {% endif %}
+    </nav>
+  </div>
+</virtiv-header-{{ ai_gen_id }}>
+
+<script>
+(function() {
+  class VirtivHeader{{ ai_gen_id }} extends HTMLElement {
+    constructor() {
+      super();
+      this.scrollThreshold = {{ block.settings.scroll_threshold }};
+    }
+
+    connectedCallback() {
+      this.handleScroll = this.handleScroll.bind(this);
+      window.addEventListener('scroll', this.handleScroll);
+      this.handleScroll();
+    }
+
+    disconnectedCallback() {
+      window.removeEventListener('scroll', this.handleScroll);
+    }
+
+    handleScroll() {
+      if (window.scrollY > this.scrollThreshold) {
+        this.classList.add('scrolled');
+      } else {
+        this.classList.remove('scrolled');
+      }
+    }
+  }
+
+  customElements.define('virtiv-header-{{ ai_gen_id }}', VirtivHeader{{ ai_gen_id }});
+})();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Luxury Valentine header",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Brand logo"
+    },
+    {
+      "type": "text",
+      "id": "brand_text",
+      "label": "Brand text",
+      "default": "VIRTIV"
+    },
+    {
+      "type": "url",
+      "id": "logo_link",
+      "label": "Logo link"
+    },
+    {
+      "type": "range",
+      "id": "logo_size",
+      "label": "Logo size",
+      "min": 60,
+      "max": 140,
+      "step": 10,
+      "unit": "px",
+      "default": 100
+    },
+    {
+      "type": "range",
+      "id": "brand_text_size",
+      "label": "Brand text size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "font_picker",
+      "id": "brand_font",
+      "label": "Brand font",
+      "default": "serif"
+    },
+    {
+      "type": "color",
+      "id": "brand_text_color",
+      "label": "Brand text color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "letter_spacing",
+      "label": "Letter spacing",
+      "min": 0,
+      "max": 5,
+      "step": 0.5,
+      "unit": "px",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Heart animation"
+    },
+    {
+      "type": "color",
+      "id": "heart_color",
+      "label": "Heart color",
+      "default": "#FFB6C1"
+    },
+    {
+      "type": "range",
+      "id": "heart_stroke_width",
+      "label": "Heart stroke width",
+      "min": 1,
+      "max": 4,
+      "step": 0.5,
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "glow_intensity",
+      "label": "Glow intensity",
+      "min": 5,
+      "max": 25,
+      "step": 5,
+      "unit": "px",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "draw_duration",
+      "label": "Draw duration",
+      "min": 1,
+      "max": 4,
+      "step": 0.5,
+      "unit": "s",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "pulse_duration",
+      "label": "Pulse duration",
+      "min": 2,
+      "max": 6,
+      "step": 0.5,
+      "unit": "s",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "particle_duration",
+      "label": "Particle duration",
+      "min": 1,
+      "max": 3,
+      "step": 0.5,
+      "unit": "s",
+      "default": 2
+    },
+    {
+      "type": "header",
+      "content": "Navigation links"
+    },
+    {
+      "type": "text",
+      "id": "link_1_text",
+      "label": "Link 1 text",
+      "default": "Home"
+    },
+    {
+      "type": "url",
+      "id": "link_1_url",
+      "label": "Link 1 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_2_text",
+      "label": "Link 2 text",
+      "default": "Shop"
+    },
+    {
+      "type": "url",
+      "id": "link_2_url",
+      "label": "Link 2 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_3_text",
+      "label": "Link 3 text",
+      "default": "Catalog"
+    },
+    {
+      "type": "url",
+      "id": "link_3_url",
+      "label": "Link 3 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_4_text",
+      "label": "Link 4 text",
+      "default": "Reviews"
+    },
+    {
+      "type": "url",
+      "id": "link_4_url",
+      "label": "Link 4 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_5_text",
+      "label": "Link 5 text",
+      "default": "About"
+    },
+    {
+      "type": "url",
+      "id": "link_5_url",
+      "label": "Link 5 URL"
+    },
+    {
+      "type": "text",
+      "id": "link_6_text",
+      "label": "Link 6 text",
+      "default": "Contact"
+    },
+    {
+      "type": "url",
+      "id": "link_6_url",
+      "label": "Link 6 URL"
+    },
+    {
+      "type": "font_picker",
+      "id": "nav_font",
+      "label": "Navigation font",
+      "default": "sans-serif"
+    },
+    {
+      "type": "range",
+      "id": "nav_text_size",
+      "label": "Navigation text size",
+      "min": 10,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "default": 14
+    },
+    {
+      "type": "color",
+      "id": "nav_text_color",
+      "label": "Navigation text color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "nav_hover_color",
+      "label": "Navigation hover color",
+      "default": "#FFB6C1"
+    },
+    {
+      "type": "range",
+      "id": "link_spacing",
+      "label": "Link spacing",
+      "min": 15,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Header layout"
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Maximum width",
+      "min": 1000,
+      "max": 1600,
+      "step": 100,
+      "unit": "px",
+      "default": 1400
+    },
+    {
+      "type": "range",
+      "id": "vertical_padding",
+      "label": "Vertical padding",
+      "min": 10,
+      "max": 50,
+      "step": 5,
+      "unit": "px",
+      "default": 25
+    },
+    {
+      "type": "range",
+      "id": "horizontal_padding",
+      "label": "Horizontal padding",
+      "min": 15,
+      "max": 60,
+      "step": 5,
+      "unit": "px",
+      "default": 30
+    },
+    {
+      "type": "header",
+      "content": "Scroll behavior"
+    },
+    {
+      "type": "range",
+      "id": "scroll_threshold",
+      "label": "Scroll threshold",
+      "min": 50,
+      "max": 300,
+      "step": 50,
+      "unit": "px",
+      "default": 100
+    },
+    {
+      "type": "color",
+      "id": "scroll_bg_color",
+      "label": "Scroll background color",
+      "default": "rgba(255, 182, 193, 0.15)"
+    },
+    {
+      "type": "range",
+      "id": "blur_amount",
+      "label": "Blur amount",
+      "min": 5,
+      "max": 20,
+      "step": 5,
+      "unit": "px",
+      "default": 10
+    }
+  ],
+  "presets": [
+    {
+      "name": "Luxury Valentine header"
+    }
+  ]
+}
 {% endschema %}
