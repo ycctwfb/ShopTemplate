@@ -1,6 +1,967 @@
+{% doc %}
+  @prompt
+    Create a social proof section built around TikTok-style vertical videos showcasing Rose Teddy Bear reactions and ads.
+    
+    Layout: horizontal scrollable video carousel with rounded corners and soft drop shadows.
+    
+    Each video auto-plays muted on hover, pauses when out of view.
+    
+    Above the videos, add headline: “The Gift Everyone’s Talking About.”
+    
+    Subtext: “Real reactions. Real emotions.”
+    
+    Add small animated heart counters and subtle engagement-style badges (likes/comments aesthetic, not fake numbers).
+    
+    Include short captions under videos like:
+    – “She cried when she opened it”
+    – “Best Valentine’s gift I’ve ever given”
+    
+    Add a sticky inline CTA below carousel: “Get Yours Before Valentine’s Day”
+    
+    Ensure mobile swipe experience feels native and addictive., i should be able to upload the video and for it to be playing. also make sure the videos are centered on the screen and they are all visible, make sure the video files play
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-social-proof-{{ ai_gen_id }} {
+    display: block;
+    width: 100%;
+    background-color: {{ block.settings.background_color }};
+    padding: {{ block.settings.section_padding }}px 0;
+  }
+
+  .ai-social-proof-container-{{ ai_gen_id }} {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  .ai-social-proof-header-{{ ai_gen_id }} {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .ai-social-proof-headline-{{ ai_gen_id }} {
+    font-size: {{ block.settings.headline_size }}px;
+    color: {{ block.settings.headline_color }};
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .ai-social-proof-subtext-{{ ai_gen_id }} {
+    font-size: {{ block.settings.subtext_size }}px;
+    color: {{ block.settings.subtext_color }};
+    margin: 0;
+    opacity: 0.9;
+  }
+
+  .ai-social-proof-carousel-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+
+  .ai-social-proof-carousel-{{ ai_gen_id }} {
+    display: flex;
+    gap: {{ block.settings.video_gap }}px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px 20px 20px;
+    justify-content: center;
+  }
+
+  .ai-social-proof-carousel-{{ ai_gen_id }}::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ai-social-proof-video-card-{{ ai_gen_id }} {
+    flex: 0 0 {{ block.settings.video_width }}px;
+    position: relative;
+    border-radius: {{ block.settings.border_radius }}px;
+    overflow: hidden;
+    box-shadow: {{ block.settings.shadow_x }}px {{ block.settings.shadow_y }}px {{ block.settings.shadow_blur }}px {{ block.settings.shadow_color }};
+    background-color: {{ block.settings.card_background }};
+    transition: transform 0.3s ease;
+  }
+
+  .ai-social-proof-video-card-{{ ai_gen_id }}:hover {
+    transform: translateY(-4px);
+  }
+
+  .ai-social-proof-video-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+    height: {{ block.settings.video_height }}px;
+    background-color: #000;
+  }
+
+  .ai-social-proof-video-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .ai-social-proof-video-placeholder-{{ ai_gen_id }} {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    font-size: 14px;
+  }
+
+  .ai-social-proof-engagement-{{ ai_gen_id }} {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    gap: 12px;
+    z-index: 2;
+  }
+
+  .ai-social-proof-badge-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background-color: {{ block.settings.badge_background }};
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: {{ block.settings.badge_text_color }};
+    backdrop-filter: blur(10px);
+  }
+
+  .ai-social-proof-heart-{{ ai_gen_id }} {
+    width: 14px;
+    height: 14px;
+    fill: {{ block.settings.heart_color }};
+  }
+
+  .ai-social-proof-comment-{{ ai_gen_id }} {
+    width: 14px;
+    height: 14px;
+    fill: {{ block.settings.badge_text_color }};
+  }
+
+  .ai-social-proof-caption-{{ ai_gen_id }} {
+    padding: 16px;
+    color: {{ block.settings.caption_color }};
+    font-size: {{ block.settings.caption_size }}px;
+    line-height: 1.4;
+    min-height: 60px;
+  }
+
+  .ai-social-proof-cta-wrapper-{{ ai_gen_id }} {
+    text-align: center;
+    position: sticky;
+    bottom: 20px;
+    z-index: 10;
+  }
+
+  .ai-social-proof-cta-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 16px 40px;
+    background-color: {{ block.settings.cta_background }};
+    color: {{ block.settings.cta_text_color }};
+    font-size: {{ block.settings.cta_size }}px;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: {{ block.settings.cta_border_radius }}px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+
+  .ai-social-proof-cta-{{ ai_gen_id }}:hover {
+    background-color: {{ block.settings.cta_hover_background }};
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  @media screen and (max-width: 749px) {
+    .ai-social-proof-carousel-{{ ai_gen_id }} {
+      justify-content: flex-start;
+      padding: 10px 10px 20px;
+    }
+
+    .ai-social-proof-video-card-{{ ai_gen_id }} {
+      flex: 0 0 {{ block.settings.video_width_mobile }}px;
+    }
+
+    .ai-social-proof-video-wrapper-{{ ai_gen_id }} {
+      height: {{ block.settings.video_height_mobile }}px;
+    }
+
+    .ai-social-proof-headline-{{ ai_gen_id }} {
+      font-size: {{ block.settings.headline_size | times: 0.8 }}px;
+    }
+
+    .ai-social-proof-cta-{{ ai_gen_id }} {
+      padding: 14px 32px;
+      font-size: {{ block.settings.cta_size | times: 0.9 }}px;
+    }
+  }
+{% endstyle %}
+
+<social-proof-carousel-{{ ai_gen_id }}
+  class="ai-social-proof-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <div class="ai-social-proof-container-{{ ai_gen_id }}">
+    <div class="ai-social-proof-header-{{ ai_gen_id }}">
+      {% if block.settings.headline != blank %}
+        <h2 class="ai-social-proof-headline-{{ ai_gen_id }}">{{ block.settings.headline }}</h2>
+      {% endif %}
+      {% if block.settings.subtext != blank %}
+        <p class="ai-social-proof-subtext-{{ ai_gen_id }}">{{ block.settings.subtext }}</p>
+      {% endif %}
+    </div>
+
+    <div class="ai-social-proof-carousel-wrapper-{{ ai_gen_id }}">
+      <div class="ai-social-proof-carousel-{{ ai_gen_id }}">
+        {% for i in (1..6) %}
+          {% liquid
+            assign video_key = 'video_' | append: i
+            assign caption_key = 'caption_' | append: i
+            assign likes_key = 'likes_' | append: i
+            assign comments_key = 'comments_' | append: i
+            assign enabled_key = 'video_' | append: i | append: '_enabled'
+
+            assign video_file = block.settings[video_key]
+            assign caption = block.settings[caption_key]
+            assign likes = block.settings[likes_key]
+            assign comments = block.settings[comments_key]
+            assign enabled = block.settings[enabled_key]
+          %}
+
+          {% if enabled %}
+            <div class="ai-social-proof-video-card-{{ ai_gen_id }}" data-video-index="{{ i }}">
+              <div class="ai-social-proof-video-wrapper-{{ ai_gen_id }}">
+                {% if video_file != blank %}
+                  <video
+                    class="ai-social-proof-video-{{ ai_gen_id }}"
+                    muted
+                    loop
+                    playsinline
+                    preload="auto"
+                    data-autoplay="true"
+                  >
+                    {% for source in video_file.sources %}
+                      <source src="{{ source.url }}" type="{{ source.mime_type }}">
+                    {% endfor %}
+                  </video>
+                {% else %}
+                  <div class="ai-social-proof-video-placeholder-{{ ai_gen_id }}">
+                    Add video {{ i }}
+                  </div>
+                {% endif %}
+
+                {% if block.settings.show_engagement %}
+                  <div class="ai-social-proof-engagement-{{ ai_gen_id }}">
+                    {% if likes != blank %}
+                      <div class="ai-social-proof-badge-{{ ai_gen_id }}">
+                        <svg class="ai-social-proof-heart-{{ ai_gen_id }}" viewBox="0 0 24 24">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span>{{ likes }}</span>
+                      </div>
+                    {% endif %}
+                    {% if comments != blank %}
+                      <div class="ai-social-proof-badge-{{ ai_gen_id }}">
+                        <svg class="ai-social-proof-comment-{{ ai_gen_id }}" viewBox="0 0 24 24">
+                          <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+                        </svg>
+                        <span>{{ comments }}</span>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+
+              {% if caption != blank %}
+                <div class="ai-social-proof-caption-{{ ai_gen_id }}">{{ caption }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    {% if block.settings.cta_text != blank %}
+      <div class="ai-social-proof-cta-wrapper-{{ ai_gen_id }}">
+        <a href="{{ block.settings.cta_link }}" class="ai-social-proof-cta-{{ ai_gen_id }}">
+          {{ block.settings.cta_text }}
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</social-proof-carousel-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class SocialProofCarousel{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.videos = [];
+        this.observer = null;
+        this.isHovering = false;
+      }
+
+      connectedCallback() {
+        this.carousel = this.querySelector('.ai-social-proof-carousel-{{ ai_gen_id }}');
+        this.videoElements = this.querySelectorAll('.ai-social-proof-video-{{ ai_gen_id }}');
+        this.cards = this.querySelectorAll('.ai-social-proof-video-card-{{ ai_gen_id }}');
+
+        this.loadAllVideos();
+        this.setupIntersectionObserver();
+        this.setupHoverPlay();
+        this.setupTouchScroll();
+      }
+
+      loadAllVideos() {
+        this.videoElements.forEach((video, index) => {
+          video.load();
+          
+          video.addEventListener('loadeddata', () => {
+            if (index === 0) {
+              setTimeout(() => {
+                this.playVideo(video);
+              }, 100);
+            }
+          });
+
+          video.addEventListener('canplay', () => {
+            if (index === 0 && !this.isHovering) {
+              this.playVideo(video);
+            }
+          });
+        });
+      }
+
+      playVideo(video) {
+        if (video && video.paused) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(() => {
+              video.muted = true;
+              video.play().catch(() => {});
+            });
+          }
+        }
+      }
+
+      pauseVideo(video) {
+        if (video && !video.paused) {
+          video.pause();
+        }
+      }
+
+      setupIntersectionObserver() {
+        const options = {
+          root: this.carousel,
+          threshold: 0.5
+        };
+
+        this.observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            const video = entry.target.querySelector('.ai-social-proof-video-{{ ai_gen_id }}');
+            if (video) {
+              if (!entry.isIntersecting) {
+                this.pauseVideo(video);
+                video.currentTime = 0;
+              } else if (!this.isHovering) {
+                this.playVideo(video);
+              }
+            }
+          });
+        }, options);
+
+        this.cards.forEach(card => {
+          this.observer.observe(card);
+        });
+      }
+
+      setupHoverPlay() {
+        this.cards.forEach(card => {
+          const video = card.querySelector('.ai-social-proof-video-{{ ai_gen_id }}');
+          if (!video) return;
+
+          card.addEventListener('mouseenter', () => {
+            this.isHovering = true;
+            this.videoElements.forEach(v => {
+              if (v !== video) {
+                this.pauseVideo(v);
+                v.currentTime = 0;
+              }
+            });
+            this.playVideo(video);
+          });
+
+          card.addEventListener('mouseleave', () => {
+            this.isHovering = false;
+          });
+
+          card.addEventListener('click', () => {
+            if (video.paused) {
+              this.playVideo(video);
+            } else {
+              this.pauseVideo(video);
+            }
+          });
+        });
+      }
+
+      setupTouchScroll() {
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        this.carousel.addEventListener('touchstart', () => {
+          this.videoElements.forEach(video => {
+            this.playVideo(video);
+          });
+        });
+
+        this.carousel.addEventListener('mousedown', (e) => {
+          isDown = true;
+          startX = e.pageX - this.carousel.offsetLeft;
+          scrollLeft = this.carousel.scrollLeft;
+          this.carousel.style.cursor = 'grabbing';
+        });
+
+        this.carousel.addEventListener('mouseleave', () => {
+          isDown = false;
+          this.carousel.style.cursor = 'grab';
+        });
+
+        this.carousel.addEventListener('mouseup', () => {
+          isDown = false;
+          this.carousel.style.cursor = 'grab';
+        });
+
+        this.carousel.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          e.preventDefault();
+          const x = e.pageX - this.carousel.offsetLeft;
+          const walk = (x - startX) * 2;
+          this.carousel.scrollLeft = scrollLeft - walk;
+        });
+      }
+
+      disconnectedCallback() {
+        if (this.observer) {
+          this.observer.disconnect();
+        }
+        this.videoElements.forEach(video => {
+          this.pauseVideo(video);
+        });
+      }
+    }
+
+    customElements.define('social-proof-carousel-{{ ai_gen_id }}', SocialProofCarousel{{ ai_gen_id }});
+  })();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Video social proof",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Header"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "headline",
+      "label": "Headline",
+      "default": "The Gift Everyone's Talking About"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtext",
+      "label": "Subtext",
+      "default": "Real reactions. Real emotions."
+    },
+    {
+      "type": "range",
+      "id": "headline_size",
+      "min": 24,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "label": "Headline size",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "subtext_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Subtext size",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Video 1"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_1_enabled",
+      "label": "Enable video 1",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_1",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_1",
+      "label": "Caption",
+      "default": "She cried when she opened it"
+    },
+    {
+      "type": "text",
+      "id": "likes_1",
+      "label": "Likes",
+      "default": "12.4k"
+    },
+    {
+      "type": "text",
+      "id": "comments_1",
+      "label": "Comments",
+      "default": "342"
+    },
+    {
+      "type": "header",
+      "content": "Video 2"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_2_enabled",
+      "label": "Enable video 2",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_2",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_2",
+      "label": "Caption",
+      "default": "Best Valentine's gift I've ever given"
+    },
+    {
+      "type": "text",
+      "id": "likes_2",
+      "label": "Likes",
+      "default": "8.9k"
+    },
+    {
+      "type": "text",
+      "id": "comments_2",
+      "label": "Comments",
+      "default": "201"
+    },
+    {
+      "type": "header",
+      "content": "Video 3"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_3_enabled",
+      "label": "Enable video 3",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_3",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_3",
+      "label": "Caption",
+      "default": "Her reaction was priceless"
+    },
+    {
+      "type": "text",
+      "id": "likes_3",
+      "label": "Likes",
+      "default": "15.2k"
+    },
+    {
+      "type": "text",
+      "id": "comments_3",
+      "label": "Comments",
+      "default": "478"
+    },
+    {
+      "type": "header",
+      "content": "Video 4"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_4_enabled",
+      "label": "Enable video 4",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_4",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_4",
+      "label": "Caption",
+      "default": "Made her Valentine's Day unforgettable"
+    },
+    {
+      "type": "text",
+      "id": "likes_4",
+      "label": "Likes",
+      "default": "10.1k"
+    },
+    {
+      "type": "text",
+      "id": "comments_4",
+      "label": "Comments",
+      "default": "289"
+    },
+    {
+      "type": "header",
+      "content": "Video 5"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_5_enabled",
+      "label": "Enable video 5",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_5",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_5",
+      "label": "Caption",
+      "default": "Worth every penny"
+    },
+    {
+      "type": "text",
+      "id": "likes_5",
+      "label": "Likes",
+      "default": "9.3k"
+    },
+    {
+      "type": "text",
+      "id": "comments_5",
+      "label": "Comments",
+      "default": "156"
+    },
+    {
+      "type": "header",
+      "content": "Video 6"
+    },
+    {
+      "type": "checkbox",
+      "id": "video_6_enabled",
+      "label": "Enable video 6",
+      "default": true
+    },
+    {
+      "type": "video",
+      "id": "video_6",
+      "label": "Video file"
+    },
+    {
+      "type": "text",
+      "id": "caption_6",
+      "label": "Caption",
+      "default": "She loved it so much"
+    },
+    {
+      "type": "text",
+      "id": "likes_6",
+      "label": "Likes",
+      "default": "11.7k"
+    },
+    {
+      "type": "text",
+      "id": "comments_6",
+      "label": "Comments",
+      "default": "312"
+    },
+    {
+      "type": "header",
+      "content": "Video layout"
+    },
+    {
+      "type": "range",
+      "id": "video_width",
+      "min": 200,
+      "max": 400,
+      "step": 10,
+      "unit": "px",
+      "label": "Video width desktop",
+      "default": 280
+    },
+    {
+      "type": "range",
+      "id": "video_height",
+      "min": 300,
+      "max": 600,
+      "step": 10,
+      "unit": "px",
+      "label": "Video height desktop",
+      "default": 500
+    },
+    {
+      "type": "range",
+      "id": "video_width_mobile",
+      "min": 150,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "label": "Video width mobile",
+      "default": 220
+    },
+    {
+      "type": "range",
+      "id": "video_height_mobile",
+      "min": 250,
+      "max": 500,
+      "step": 10,
+      "unit": "px",
+      "label": "Video height mobile",
+      "default": 390
+    },
+    {
+      "type": "range",
+      "id": "video_gap",
+      "min": 10,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Gap between videos",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Border radius",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Engagement badges"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_engagement",
+      "label": "Show engagement badges",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "heart_color",
+      "label": "Heart color",
+      "default": "#ff4458"
+    },
+    {
+      "type": "color",
+      "id": "badge_background",
+      "label": "Badge background",
+      "default": "rgba(0, 0, 0, 0.6)"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Badge text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "CTA button"
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA text",
+      "default": "Get Yours Before Valentine's Day"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "CTA link"
+    },
+    {
+      "type": "range",
+      "id": "cta_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "CTA font size",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "cta_border_radius",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "CTA border radius",
+      "default": 30
+    },
+    {
+      "type": "color",
+      "id": "cta_background",
+      "label": "CTA background",
+      "default": "#ff4458"
+    },
+    {
+      "type": "color",
+      "id": "cta_hover_background",
+      "label": "CTA hover background",
+      "default": "#e63946"
+    },
+    {
+      "type": "color",
+      "id": "cta_text_color",
+      "label": "CTA text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#0a0a0a"
+    },
+    {
+      "type": "color",
+      "id": "headline_color",
+      "label": "Headline",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "subtext_color",
+      "label": "Subtext",
+      "default": "#cccccc"
+    },
+    {
+      "type": "color",
+      "id": "card_background",
+      "label": "Card background",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "caption_color",
+      "label": "Caption",
+      "default": "#e0e0e0"
+    },
+    {
+      "type": "range",
+      "id": "caption_size",
+      "min": 12,
+      "max": 18,
+      "step": 1,
+      "unit": "px",
+      "label": "Caption size",
+      "default": 14
+    },
+    {
+      "type": "header",
+      "content": "Shadow"
+    },
+    {
+      "type": "range",
+      "id": "shadow_x",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "label": "Shadow X offset",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "shadow_y",
+      "min": 0,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Shadow Y offset",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "shadow_blur",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Shadow blur",
+      "default": 24
+    },
+    {
+      "type": "color",
+      "id": "shadow_color",
+      "label": "Shadow color",
+      "default": "rgba(0, 0, 0, 0.4)"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "section_padding",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "px",
+      "label": "Section padding",
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video social proof"
+    }
+  ]
+}
 {% endschema %}
