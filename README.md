@@ -1,0 +1,2 @@
+# ShopTemplate
+shopify blank template
