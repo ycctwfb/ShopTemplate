@@ -86,7 +86,7 @@
             "gradient_color_1": "#fff5f7",
             "gradient_color_2": "#ffe8ed",
             "gradient_color_3": "#ffd6e0",
-            "parallax_speed": 0.1,
+            "parallax_speed": 0,
             "heart_count": 5,
             "heart_color": "#ffc9d4",
             "headline": "More Than a Gift. A Memory.",
