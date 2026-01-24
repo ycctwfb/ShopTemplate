@@ -1,6 +1,676 @@
+{% doc %}
+  @prompt
+    generate a dynamic animate header for my page with glowing love hearts and cupid shooting arrows, make it thin like a website header, move shop now slightly left, keep the same theme of the navbar but give it more of a premium luxury vibe. maybe something to do with gold
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-cupid-header-{{ ai_gen_id }} {
+    display: block;
+    position: relative;
+    width: 100%;
+    background: linear-gradient(135deg, {{ block.settings.background_color }} 0%, {{ block.settings.background_gradient_color }} 100%);
+    overflow: hidden;
+    padding: {{ block.settings.header_height }}px 20px;
+    border-bottom: 1px solid {{ block.settings.border_color }};
+  }
+
+  .ai-cupid-header__canvas-{{ ai_gen_id }} {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .ai-cupid-header__content-{{ ai_gen_id }} {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 20px;
+  }
+
+  .ai-cupid-header__title-{{ ai_gen_id }} {
+    font-size: {{ block.settings.title_size }}px;
+    background: linear-gradient(135deg, {{ block.settings.title_color }} 0%, {{ block.settings.title_gradient_color }} 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+
+  .ai-cupid-header__subtitle-{{ ai_gen_id }} {
+    font-size: {{ block.settings.subtitle_size }}px;
+    color: {{ block.settings.subtitle_color }};
+    margin: 0;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .ai-cupid-header__text-{{ ai_gen_id }} {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .ai-cupid-header__cta-{{ ai_gen_id }} {
+    display: inline-block;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, {{ block.settings.button_color }} 0%, {{ block.settings.button_gradient_color }} 100%);
+    color: {{ block.settings.button_text_color }};
+    text-decoration: none;
+    border-radius: {{ block.settings.button_radius }}px;
+    font-size: {{ block.settings.button_size }}px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    margin-right: 60px;
+    border: 1px solid {{ block.settings.button_border_color }};
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .ai-cupid-header__cta-{{ ai_gen_id }}:hover {
+    background: linear-gradient(135deg, {{ block.settings.button_hover_color }} 0%, {{ block.settings.button_hover_gradient_color }} 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+  }
+
+  @media screen and (max-width: 990px) {
+    .ai-cupid-header__content-{{ ai_gen_id }} {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .ai-cupid-header__text-{{ ai_gen_id }} {
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .ai-cupid-header__title-{{ ai_gen_id }} {
+      font-size: {{ block.settings.title_size | times: 0.8 }}px;
+    }
+
+    .ai-cupid-header__subtitle-{{ ai_gen_id }} {
+      font-size: {{ block.settings.subtitle_size | times: 0.9 }}px;
+    }
+
+    .ai-cupid-header__cta-{{ ai_gen_id }} {
+      margin-right: 0;
+    }
+  }
+{% endstyle %}
+
+<cupid-header-{{ ai_gen_id }}
+  class="ai-cupid-header-{{ ai_gen_id }}"
+  data-heart-count="{{ block.settings.heart_count }}"
+  data-heart-color="{{ block.settings.heart_color }}"
+  data-heart-glow="{{ block.settings.heart_glow_color }}"
+  data-arrow-speed="{{ block.settings.arrow_speed }}"
+  data-cupid-enabled="{{ block.settings.show_cupid }}"
+  data-gold-accent="{{ block.settings.gold_accent_color }}"
+  {{ block.shopify_attributes }}
+>
+  <canvas class="ai-cupid-header__canvas-{{ ai_gen_id }}"></canvas>
+
+  <div class="ai-cupid-header__content-{{ ai_gen_id }}">
+    <div class="ai-cupid-header__text-{{ ai_gen_id }}">
+      {% if block.settings.title != blank %}
+        <h1 class="ai-cupid-header__title-{{ ai_gen_id }}">{{ block.settings.title }}</h1>
+      {% endif %}
+
+      {% if block.settings.subtitle != blank %}
+        <p class="ai-cupid-header__subtitle-{{ ai_gen_id }}">{{ block.settings.subtitle }}</p>
+      {% endif %}
+    </div>
+
+    {% if block.settings.button_text != blank %}
+      <a href="{{ block.settings.button_link }}" class="ai-cupid-header__cta-{{ ai_gen_id }}">
+        {{ block.settings.button_text }}
+      </a>
+    {% endif %}
+  </div>
+</cupid-header-{{ ai_gen_id }}>
+
+<script>
+  (function() {
+    class CupidHeader{{ ai_gen_id }} extends HTMLElement {
+      constructor() {
+        super();
+        this.canvas = this.querySelector('.ai-cupid-header__canvas-{{ ai_gen_id }}');
+        this.ctx = this.canvas.getContext('2d');
+        this.hearts = [];
+        this.arrows = [];
+        this.goldParticles = [];
+        this.cupid = null;
+        this.animationId = null;
+      }
+
+      connectedCallback() {
+        this.heartCount = parseInt(this.dataset.heartCount) || 10;
+        this.heartColor = this.dataset.heartColor || '#d4af37';
+        this.heartGlow = this.dataset.heartGlow || '#ffd700';
+        this.arrowSpeed = parseFloat(this.dataset.arrowSpeed) || 3;
+        this.cupidEnabled = this.dataset.cupidEnabled === 'true';
+        this.goldAccent = this.dataset.goldAccent || '#ffd700';
+
+        this.resizeCanvas();
+        this.initHearts();
+        this.initGoldParticles();
+        if (this.cupidEnabled) {
+          this.initCupid();
+        }
+        this.animate();
+
+        window.addEventListener('resize', this.resizeCanvas.bind(this));
+      }
+
+      disconnectedCallback() {
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+        }
+        window.removeEventListener('resize', this.resizeCanvas.bind(this));
+      }
+
+      resizeCanvas() {
+        this.canvas.width = this.offsetWidth;
+        this.canvas.height = this.offsetHeight;
+      }
+
+      initHearts() {
+        this.hearts = [];
+        for (let i = 0; i < this.heartCount; i++) {
+          this.hearts.push({
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height,
+            size: Math.random() * 10 + 8,
+            speedX: (Math.random() - 0.5) * 0.4,
+            speedY: (Math.random() - 0.5) * 0.4,
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.05 + 0.02,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: (Math.random() - 0.5) * 0.02
+          });
+        }
+      }
+
+      initGoldParticles() {
+        this.goldParticles = [];
+        for (let i = 0; i < 15; i++) {
+          this.goldParticles.push({
+            x: Math.random() * this.canvas.width,
+            y: Math.random() * this.canvas.height,
+            size: Math.random() * 3 + 1,
+            speedX: (Math.random() - 0.5) * 0.3,
+            speedY: (Math.random() - 0.5) * 0.3,
+            opacity: Math.random() * 0.5 + 0.3,
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.03 + 0.01
+          });
+        }
+      }
+
+      initCupid() {
+        this.cupid = {
+          x: -80,
+          y: this.canvas.height * 0.5,
+          size: 30,
+          speedX: 1.2,
+          direction: 1,
+          shootTimer: 0,
+          shootInterval: 100
+        };
+      }
+
+      drawHeart(x, y, size, glow, rotation) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(rotation);
+        this.ctx.scale(size / 20, size / 20);
+
+        if (glow > 0) {
+          this.ctx.shadowBlur = 20 + glow * 12;
+          this.ctx.shadowColor = this.heartGlow;
+        }
+
+        const gradient = this.ctx.createLinearGradient(-20, -20, 20, 20);
+        gradient.addColorStop(0, this.heartColor);
+        gradient.addColorStop(1, this.heartGlow);
+        this.ctx.fillStyle = gradient;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 0);
+        this.ctx.bezierCurveTo(-10, -10, -20, -5, -20, 5);
+        this.ctx.bezierCurveTo(-20, 15, -10, 20, 0, 25);
+        this.ctx.bezierCurveTo(10, 20, 20, 15, 20, 5);
+        this.ctx.bezierCurveTo(20, -5, 10, -10, 0, 0);
+        this.ctx.fill();
+
+        this.ctx.restore();
+      }
+
+      drawGoldParticle(x, y, size, opacity) {
+        this.ctx.save();
+        this.ctx.globalAlpha = opacity;
+        this.ctx.shadowBlur = 10;
+        this.ctx.shadowColor = this.goldAccent;
+        this.ctx.fillStyle = this.goldAccent;
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, size, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+      }
+
+      drawCupid(x, y, size) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+
+        const bodyGradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.4);
+        bodyGradient.addColorStop(0, '#ffd700');
+        bodyGradient.addColorStop(1, '#d4af37');
+        this.ctx.fillStyle = bodyGradient;
+        this.ctx.shadowBlur = 15;
+        this.ctx.shadowColor = '#ffd700';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, size * 0.4, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.shadowBlur = 0;
+        this.ctx.fillStyle = '#ffe4b5';
+        this.ctx.beginPath();
+        this.ctx.arc(-size * 0.15, -size * 0.1, size * 0.15, 0, Math.PI * 2);
+        this.ctx.arc(size * 0.15, -size * 0.1, size * 0.15, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        const bowGradient = this.ctx.createLinearGradient(0, -size * 0.6, 0, size * 0.6);
+        bowGradient.addColorStop(0, '#d4af37');
+        bowGradient.addColorStop(1, '#b8860b');
+        this.ctx.strokeStyle = bowGradient;
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.arc(size * 0.5, 0, size * 0.6, Math.PI * 0.7, Math.PI * 1.3);
+        this.ctx.stroke();
+
+        this.ctx.restore();
+      }
+
+      drawArrow(x, y, angle, length) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(angle);
+
+        const shaftGradient = this.ctx.createLinearGradient(0, 0, length, 0);
+        shaftGradient.addColorStop(0, '#8b7355');
+        shaftGradient.addColorStop(1, '#d4af37');
+        this.ctx.strokeStyle = shaftGradient;
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(0, 0);
+        this.ctx.lineTo(length, 0);
+        this.ctx.stroke();
+
+        const tipGradient = this.ctx.createLinearGradient(length - 8, 0, length, 0);
+        tipGradient.addColorStop(0, '#d4af37');
+        tipGradient.addColorStop(1, '#ffd700');
+        this.ctx.fillStyle = tipGradient;
+        this.ctx.shadowBlur = 8;
+        this.ctx.shadowColor = '#ffd700';
+        this.ctx.beginPath();
+        this.ctx.moveTo(length, 0);
+        this.ctx.lineTo(length - 8, -5);
+        this.ctx.lineTo(length - 8, 5);
+        this.ctx.closePath();
+        this.ctx.fill();
+
+        this.ctx.restore();
+      }
+
+      updateHearts() {
+        this.hearts.forEach(heart => {
+          heart.x += heart.speedX;
+          heart.y += heart.speedY;
+          heart.pulse += heart.pulseSpeed;
+          heart.rotation += heart.rotationSpeed;
+
+          if (heart.x < -20) heart.x = this.canvas.width + 20;
+          if (heart.x > this.canvas.width + 20) heart.x = -20;
+          if (heart.y < -20) heart.y = this.canvas.height + 20;
+          if (heart.y > this.canvas.height + 20) heart.y = -20;
+
+          const glowIntensity = Math.sin(heart.pulse) * 0.5 + 0.5;
+          this.drawHeart(heart.x, heart.y, heart.size, glowIntensity, heart.rotation);
+        });
+      }
+
+      updateGoldParticles() {
+        this.goldParticles.forEach(particle => {
+          particle.x += particle.speedX;
+          particle.y += particle.speedY;
+          particle.pulse += particle.pulseSpeed;
+
+          if (particle.x < -10) particle.x = this.canvas.width + 10;
+          if (particle.x > this.canvas.width + 10) particle.x = -10;
+          if (particle.y < -10) particle.y = this.canvas.height + 10;
+          if (particle.y > this.canvas.height + 10) particle.y = -10;
+
+          const opacity = particle.opacity * (Math.sin(particle.pulse) * 0.3 + 0.7);
+          this.drawGoldParticle(particle.x, particle.y, particle.size, opacity);
+        });
+      }
+
+      updateCupid() {
+        if (!this.cupidEnabled || !this.cupid) return;
+
+        this.cupid.x += this.cupid.speedX * this.cupid.direction;
+
+        if (this.cupid.x > this.canvas.width + 80) {
+          this.cupid.direction = -1;
+          this.cupid.y = this.canvas.height * 0.5;
+        }
+        if (this.cupid.x < -80) {
+          this.cupid.direction = 1;
+          this.cupid.y = this.canvas.height * 0.5;
+        }
+
+        this.drawCupid(this.cupid.x, this.cupid.y, this.cupid.size);
+
+        this.cupid.shootTimer++;
+        if (this.cupid.shootTimer >= this.cupid.shootInterval) {
+          this.shootArrow();
+          this.cupid.shootTimer = 0;
+        }
+      }
+
+      shootArrow() {
+        const angle = (Math.random() - 0.5) * 0.4;
+        this.arrows.push({
+          x: this.cupid.x,
+          y: this.cupid.y,
+          angle: angle,
+          speed: this.arrowSpeed,
+          length: 25,
+          direction: this.cupid.direction
+        });
+      }
+
+      updateArrows() {
+        this.arrows = this.arrows.filter(arrow => {
+          arrow.x += Math.cos(arrow.angle) * arrow.speed * arrow.direction;
+          arrow.y += Math.sin(arrow.angle) * arrow.speed;
+
+          const onScreen = arrow.x > -50 && arrow.x < this.canvas.width + 50 &&
+                          arrow.y > -50 && arrow.y < this.canvas.height + 50;
+
+          if (onScreen) {
+            this.drawArrow(arrow.x, arrow.y, arrow.angle, arrow.length);
+          }
+
+          return onScreen;
+        });
+      }
+
+      animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        this.updateGoldParticles();
+        this.updateHearts();
+        this.updateCupid();
+        this.updateArrows();
+
+        this.animationId = requestAnimationFrame(this.animate.bind(this));
+      }
+    }
+
+    customElements.define('cupid-header-{{ ai_gen_id }}', CupidHeader{{ ai_gen_id }});
+  })();
+</script>
+
 {% schema %}
- {
-   "name": "AI_Block",
-   "tag": "shopify-ai-generated-block"
- }
+{
+  "name": "Luxury cupid header",
+  "tag": null,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "title",
+      "label": "Title",
+      "default": "Love is in the Air"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Valentine's Collection"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "header_height",
+      "min": 10,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "label": "Header height",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "Background"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background start",
+      "default": "#0a0a0a"
+    },
+    {
+      "type": "color",
+      "id": "background_gradient_color",
+      "label": "Background end",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border",
+      "default": "#2a2a2a"
+    },
+    {
+      "type": "header",
+      "content": "Text colors"
+    },
+    {
+      "type": "color",
+      "id": "title_color",
+      "label": "Title start",
+      "default": "#ffd700"
+    },
+    {
+      "type": "color",
+      "id": "title_gradient_color",
+      "label": "Title end",
+      "default": "#d4af37"
+    },
+    {
+      "type": "color",
+      "id": "subtitle_color",
+      "label": "Subtitle",
+      "default": "#c0c0c0"
+    },
+    {
+      "type": "header",
+      "content": "Button colors"
+    },
+    {
+      "type": "color",
+      "id": "button_color",
+      "label": "Background start",
+      "default": "#d4af37"
+    },
+    {
+      "type": "color",
+      "id": "button_gradient_color",
+      "label": "Background end",
+      "default": "#b8860b"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_color",
+      "label": "Hover background start",
+      "default": "#ffd700"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_gradient_color",
+      "label": "Hover background end",
+      "default": "#d4af37"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Text",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "button_border_color",
+      "label": "Border",
+      "default": "#ffd700"
+    },
+    {
+      "type": "header",
+      "content": "Typography"
+    },
+    {
+      "type": "range",
+      "id": "title_size",
+      "min": 16,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "label": "Title size",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "subtitle_size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "label": "Subtitle size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_size",
+      "min": 12,
+      "max": 20,
+      "step": 1,
+      "unit": "px",
+      "label": "Button text size",
+      "default": 14
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "min": 0,
+      "max": 30,
+      "step": 2,
+      "unit": "px",
+      "label": "Button border radius",
+      "default": 6
+    },
+    {
+      "type": "header",
+      "content": "Hearts"
+    },
+    {
+      "type": "range",
+      "id": "heart_count",
+      "min": 5,
+      "max": 20,
+      "step": 1,
+      "label": "Heart count",
+      "default": 10
+    },
+    {
+      "type": "color",
+      "id": "heart_color",
+      "label": "Heart color",
+      "default": "#d4af37"
+    },
+    {
+      "type": "color",
+      "id": "heart_glow_color",
+      "label": "Heart glow color",
+      "default": "#ffd700"
+    },
+    {
+      "type": "header",
+      "content": "Gold accents"
+    },
+    {
+      "type": "color",
+      "id": "gold_accent_color",
+      "label": "Gold particle color",
+      "default": "#ffd700"
+    },
+    {
+      "type": "header",
+      "content": "Cupid"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cupid",
+      "label": "Show cupid",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "arrow_speed",
+      "min": 1,
+      "max": 6,
+      "step": 0.5,
+      "unit": "px",
+      "label": "Arrow speed",
+      "default": 3
+    }
+  ],
+  "presets": [
+    {
+      "name": "Luxury cupid header"
+    }
+  ]
+}
 {% endschema %}
