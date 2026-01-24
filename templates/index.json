@@ -13,6 +13,10 @@
       "type": "index-section",
       "settings": {}
     },
+    "1769294441a4d93a4e": {
+      "type": "_blocks",
+      "settings": {}
+    },
     "blocks_hDwTKE": {
       "type": "_blocks",
       "blocks": {
@@ -22,7 +26,7 @@
             "title": "Virtiv",
             "subtitle": "Valentine's Collection",
             "button_text": "Shop Now",
-            "button_link": "",
+            "button_link": "https://x7vmls9uib5y6rdj-97911865679.shopifypreview.com/pages?preview_key=4eabe5aa132e6258a53a042c9fdb6aeb",
             "header_height": 20,
             "background_color": "#0a0a0a",
             "background_gradient_color": "#ffd6e0",
@@ -248,6 +252,7 @@
   },
   "order": [
     "main",
+    "1769294441a4d93a4e",
     "blocks_hDwTKE",
     "17691124391a309931"
   ]
